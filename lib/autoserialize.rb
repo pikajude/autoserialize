@@ -12,13 +12,13 @@ module Outright
         format = validate_serialization_format!(format)
         db_column ||= :"#{attribute}_#{format}"
         class_name = self.name
-        
+
         options_str = ''
         if default_value.respond_to?('with_indifferent_access')
           options_str += '.with_indifferent_access'
         end
         default_value = default_value.inspect
-        
+
         define_methods_str = <<END_DEFINE_METHODS_STRING
           def save_#{attribute}
             self.#{db_column} = #{class_name}.to_#{format}(@#{attribute}) if @#{attribute}
@@ -27,7 +27,7 @@ module Outright
 
           def #{attribute}
             return @#{attribute} if @#{attribute}
-            @#{attribute} = ( self.#{db_column} ? #{class_name}.from_#{format}(self.#{db_column}) || #{default_value} : #{default_value} )#{options_str} 
+            @#{attribute} = ( self.#{db_column} ? #{class_name}.from_#{format}(self.#{db_column}) || #{default_value} : #{default_value} )#{options_str}
           end
 
           def #{attribute}=(attr)
@@ -41,14 +41,15 @@ module Outright
 END_DEFINE_METHODS_STRING
         self.send(:class_eval, define_methods_str)
       end
-      
+
       def to_json(object)
         object.to_json
       end
       def from_json(object_str)
+        return nil if object_str == "null"
         ActiveSupport::JSON.decode(object_str)
       end
-      
+
       protected
       VALID_FORMATS = [:json]
       def validate_serialization_format!(format)
@@ -59,7 +60,7 @@ END_DEFINE_METHODS_STRING
         format
       end
     end
-    
+
   end
 end
 
